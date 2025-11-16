@@ -84,7 +84,7 @@ export const LightTheme = {
   background: Colors.white,
   backgroundSecondary: Colors.mint50,
   backgroundTertiary: Colors.mint100,
-  backgroundPale: '#EFF7F6', // Pale mint/seafoam for login screen
+  backgroundPale: '#FAFBFB', // Very light gray for dashboard
 
   // Text
   textPrimary: '#333333',

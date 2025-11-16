@@ -47,9 +47,9 @@ const Login = () => {
       return;
     }
 
-    // Success flow - Navigate to Dashboard
+    // Success flow - Navigate to Main (which contains bottom tabs)
     console.log('Phone number submitted:', phoneNumber);
-    navigation.navigate('Dashboard');
+    navigation.navigate('Main');
   };
 
   // Handle Gmail login

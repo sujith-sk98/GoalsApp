@@ -8,16 +8,84 @@ import { StatusBar, useColorScheme } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import Icon from 'react-native-vector-icons/Feather';
 import Login from './src/pages/login/Login';
 import Dashboard from './src/pages/dashboard/Dashboard';
+import Profile from './src/pages/profile/Profile';
+import CreateGoal from './src/pages/createGoal/CreateGoal';
+import { Theme } from './src/utils/theme';
 
 // Define navigation types
 export type RootStackParamList = {
   Login: undefined;
-  Dashboard: undefined;
+  Main: undefined;
+};
+
+export type MainTabParamList = {
+  Home: undefined;
+  CreateGoal: undefined;
+  Profile: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator<MainTabParamList>();
+
+// Bottom Tab Navigator
+function MainTabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: string;
+
+          if (route.name === 'Home') {
+            iconName = 'home';
+          } else if (route.name === 'CreateGoal') {
+            iconName = 'plus-circle';
+          } else if (route.name === 'Profile') {
+            iconName = 'user';
+          } else {
+            iconName = 'circle';
+          }
+
+          return <Icon name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: Theme.primary,
+        tabBarInactiveTintColor: Theme.textTertiary,
+        tabBarStyle: {
+          borderTopWidth: 1,
+          borderTopColor: Theme.borderLight,
+          backgroundColor: Theme.background,
+          paddingBottom: 8,
+          paddingTop: 8,
+          height: 60,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+        },
+      })}
+    >
+      <Tab.Screen 
+        name="Home" 
+        component={Dashboard}
+        options={{ tabBarLabel: 'Home' }}
+      />
+      <Tab.Screen 
+        name="CreateGoal" 
+        component={CreateGoal}
+        options={{ tabBarLabel: 'Create Goal' }}
+      />
+      <Tab.Screen 
+        name="Profile" 
+        component={Profile}
+        options={{ tabBarLabel: 'Profile' }}
+      />
+    </Tab.Navigator>
+  );
+}
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -33,7 +101,7 @@ function App() {
           }}
         >
           <Stack.Screen name="Login" component={Login} />
-          <Stack.Screen name="Dashboard" component={Dashboard} />
+          <Stack.Screen name="Main" component={MainTabs} />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
