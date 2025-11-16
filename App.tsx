@@ -13,7 +13,7 @@ import Icon from 'react-native-vector-icons/Feather';
 import Login from './src/pages/login/Login';
 import Dashboard from './src/pages/dashboard/Dashboard';
 import Profile from './src/pages/profile/Profile';
-import CreateGoal from './src/pages/createGoal/CreateGoal';
+import CreateGoal from './src/pages/createGoal/Add';
 import { Theme } from './src/utils/theme';
 
 // Define navigation types
@@ -24,7 +24,7 @@ export type RootStackParamList = {
 
 export type MainTabParamList = {
   Home: undefined;
-  CreateGoal: undefined;
+  Add: undefined;
   Profile: undefined;
 };
 
@@ -42,7 +42,7 @@ function MainTabs() {
 
           if (route.name === 'Home') {
             iconName = 'home';
-          } else if (route.name === 'CreateGoal') {
+          } else if (route.name === 'Add') {
             iconName = 'plus-circle';
           } else if (route.name === 'Profile') {
             iconName = 'user';
@@ -74,9 +74,9 @@ function MainTabs() {
         options={{ tabBarLabel: 'Home' }}
       />
       <Tab.Screen 
-        name="CreateGoal" 
+        name="Add" 
         component={CreateGoal}
-        options={{ tabBarLabel: 'Create Goal' }}
+        options={{ tabBarLabel: 'Add' }}
       />
       <Tab.Screen 
         name="Profile" 

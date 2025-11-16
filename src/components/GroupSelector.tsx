@@ -9,19 +9,43 @@ import { StyleSheet, Text, View, TouchableOpacity, Modal, FlatList } from 'react
 import Icon from 'react-native-vector-icons/Feather';
 import { Theme, Spacing, FontSize, FontWeight, BorderRadius, Colors } from '../utils/theme';
 import { GoalGroup } from '../constants/constants';
+import ConfirmDialog from './ConfirmDialog';
 
 type GroupSelectorProps = {
   groups: GoalGroup[];
   selectedGroup: GoalGroup;
   onSelectGroup: (group: GoalGroup) => void;
+  onDeleteGroup?: (groupId: string) => void;
 };
 
-const GroupSelector = ({ groups, selectedGroup, onSelectGroup }: GroupSelectorProps) => {
+const GroupSelector = ({ groups, selectedGroup, onSelectGroup, onDeleteGroup }: GroupSelectorProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
+  const [groupToDelete, setGroupToDelete] = useState<GoalGroup | null>(null);
 
   const handleSelect = (group: GoalGroup) => {
     onSelectGroup(group);
     setIsOpen(false);
+  };
+
+  const handleDeletePress = (group: GoalGroup, event: any) => {
+    event.stopPropagation();
+    setGroupToDelete(group);
+    setDeleteConfirmVisible(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (groupToDelete && onDeleteGroup) {
+      onDeleteGroup(groupToDelete.id);
+      setDeleteConfirmVisible(false);
+      setGroupToDelete(null);
+      setIsOpen(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirmVisible(false);
+    setGroupToDelete(null);
   };
 
   return (
@@ -77,9 +101,20 @@ const GroupSelector = ({ groups, selectedGroup, onSelectGroup }: GroupSelectorPr
                     >
                       {item.name}
                     </Text>
-                    {item.id === selectedGroup.id && (
-                      <Icon name="check" size={20} color={Theme.primary} />
-                    )}
+                    <View style={styles.optionIcons}>
+                      {item.id === selectedGroup.id && (
+                        <Icon name="check" size={20} color={Theme.primary} style={styles.checkIcon} />
+                      )}
+                      {onDeleteGroup && (
+                        <TouchableOpacity
+                          onPress={(e) => handleDeletePress(item, e)}
+                          style={styles.deleteButton}
+                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        >
+                          <Icon name="trash-2" size={18} color={Colors.red600} />
+                        </TouchableOpacity>
+                      )}
+                    </View>
                   </TouchableOpacity>
                 )}
               />
@@ -87,6 +122,18 @@ const GroupSelector = ({ groups, selectedGroup, onSelectGroup }: GroupSelectorPr
           </View>
         </TouchableOpacity>
       </Modal>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        visible={deleteConfirmVisible}
+        title="Delete Group"
+        message={groupToDelete ? `Are you sure you want to delete "${groupToDelete.name}"? This action cannot be undone.` : ''}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        destructive={true}
+      />
     </View>
   );
 };
@@ -158,6 +205,17 @@ const styles = StyleSheet.create({
   selectedOptionText: {
     fontWeight: FontWeight.semibold,
     color: Theme.primary,
+  },
+  optionIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  checkIcon: {
+    marginRight: Spacing.xs,
+  },
+  deleteButton: {
+    padding: Spacing.xs,
   },
 });
 
