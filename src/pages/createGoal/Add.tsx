@@ -234,11 +234,12 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   buttonText: {
-    fontSize: FontSize.base,
-    fontWeight: FontWeight.bold,
-    color: Colors.white,
     flex: 1,
     textAlign: 'center',
+        fontSize: FontSize.xl,
+    fontWeight: FontWeight.semibold,
+    color: Theme.textInverse,
+    fontFamily: 'Caveat-Bold'
   },
   bottomSpacer: {
     height: Spacing.xxl,

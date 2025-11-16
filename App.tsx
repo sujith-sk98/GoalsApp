@@ -71,17 +71,17 @@ function MainTabs() {
       <Tab.Screen 
         name="Home" 
         component={Dashboard}
-        options={{ tabBarLabel: 'Home' }}
+        options={{ tabBarLabel: '' }}
       />
       <Tab.Screen 
         name="Add" 
         component={CreateGoal}
-        options={{ tabBarLabel: 'Add' }}
+        options={{ tabBarLabel: '' }}
       />
       <Tab.Screen 
         name="Profile" 
         component={Profile}
-        options={{ tabBarLabel: 'Profile' }}
+        options={{ tabBarLabel: '' }}
       />
     </Tab.Navigator>
   );

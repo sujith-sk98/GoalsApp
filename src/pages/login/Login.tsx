@@ -88,7 +88,7 @@ const Login = () => {
                 </View>
 
                 {/* App Title - Script font */}
-                <Text style={styles.title}>Goals</Text>
+                <Text style={styles.title}> Goals </Text>
 
                 {/* Subtitle */}
                 <Text style={styles.subtitle}>

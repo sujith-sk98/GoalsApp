@@ -177,8 +177,8 @@ const Dashboard = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Header with Greeting and Group Selector */}
         <View style={styles.header}>
           <View style={styles.greetingSection}>
@@ -237,7 +237,7 @@ const Dashboard = () => {
               <View style={styles.addGoalIconContainer}>
                 <Icon name="plus" size={20} color={Colors.white} />
               </View>
-              <Text style={styles.addGoalButtonText}>Create New Goal</Text>
+              <Text style={styles.addGoalButtonText}>Create New Goal </Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -414,13 +414,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.white,
   },
+  scrollContent: {
+    paddingTop: Spacing.md,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.xl,
+    paddingTop: 0,
+    paddingBottom: Spacing.md,
   },
   greetingSection: {
     flex: 1,
@@ -437,8 +440,7 @@ const styles = StyleSheet.create({
     color: Theme.textPrimary,
   },
   carouselSection: {
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.md,
+    paddingTop: Spacing.sm,
   },
   carouselContent: {
     paddingLeft: Spacing.xl,
@@ -450,7 +452,8 @@ const styles = StyleSheet.create({
     marginRight: Spacing.lg,
   },
   paginationContainer: {
-    paddingVertical: Spacing.md,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.lg,
     borderBottomColor: Theme.borderLight,
   },
   paginationDots: {
@@ -489,7 +492,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 6,
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.xxl,
     height: 56,
   },
   addGoalButtonContent: {
@@ -502,9 +505,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   addGoalButtonText: {
-    fontSize: FontSize.base,
+    fontSize: FontSize.xl,
     fontWeight: FontWeight.semibold,
     color: Theme.textInverse,
+    fontFamily: 'Caveat-Bold'
   },
   bottomSpacer: {
     height: Spacing.xl * 2,
