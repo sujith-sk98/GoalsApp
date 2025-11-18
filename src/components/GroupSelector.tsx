@@ -4,7 +4,7 @@
  * Dropdown selector for choosing between different goal groups.
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Modal, FlatList } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { Theme, Spacing, FontSize, FontWeight, BorderRadius, Colors } from '../utils/theme';
@@ -47,6 +47,10 @@ const GroupSelector = ({ groups, selectedGroup, onSelectGroup, onDeleteGroup }: 
     setDeleteConfirmVisible(false);
     setGroupToDelete(null);
   };
+
+  useEffect(() => {
+
+  })
 
   return (
     <View>

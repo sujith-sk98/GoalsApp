@@ -26,7 +26,7 @@ const SwipeableTaskItem: React.FC<SwipeableTaskItemProps> = ({ goal, cardTitle, 
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponder: () => false,
       onMoveShouldSetPanResponder: (_, gestureState) => {
         return Math.abs(gestureState.dx) > 5;
       },
@@ -72,7 +72,7 @@ const SwipeableTaskItem: React.FC<SwipeableTaskItemProps> = ({ goal, cardTitle, 
 
   const checkmarkOpacity = translateX.interpolate({
     inputRange: [0, SWIPE_THRESHOLD / 2, SWIPE_THRESHOLD],
-    outputRange: [0, 0, 1],
+    outputRange: [0, 0.5, 1],
     extrapolate: 'clamp',
   });
 
