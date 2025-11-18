@@ -4,21 +4,41 @@
  * User profile and settings screen.
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/Feather';
 import { Theme, Spacing, FontSize, FontWeight, Colors } from '../../utils/theme';
-import { USER_INFO } from '../../constants/constants';
 import { RootStackParamList } from '../../../App';
+import { GoalStorage } from '../../storage';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
 
 const Profile = () => {
   const navigation = useNavigation<NavigationProp>();
   const appVersion = require('../../../package.json').version;
+  const [userInfo, setUserInfo] = React.useState<{ name: string; email: string; phone: string; isPremium: boolean }>({
+    name: '',
+    email: '',
+    phone: '',
+    isPremium: false,
+  });
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      const profile = await GoalStorage.getUser();
+      if (profile) {
+        setUserInfo({
+          name: profile.name,
+          email: profile.email,
+          phone: profile.phone || '',
+          isPremium: profile.isPremium,
+        });
+      }
+    };
+    fetchUserInfo();
+  })
 
   const handleLogout = () => {
     // Navigate to login screen
@@ -45,14 +65,14 @@ const Profile = () => {
             <View style={styles.avatar}>
               <Icon name="user" size={48} color={Colors.white} />
             </View>
-            {USER_INFO.isPremium && (
+            {userInfo.isPremium && (
               <View style={styles.premiumBadge}>
                 <Icon name="star" size={16} color={Colors.yellow500} />
               </View>
             )}
           </View>
-          <Text style={styles.userName}>{USER_INFO.name}</Text>
-          {USER_INFO.isPremium && (
+          <Text style={styles.userName}>{userInfo.name}</Text>
+          {userInfo.isPremium && (
             <View style={styles.premiumTag}>
               <Icon name="award" size={14} color={Colors.yellow600} />
               <Text style={styles.premiumText}>Premium Member</Text>
@@ -71,7 +91,7 @@ const Profile = () => {
               </View>
               <View style={styles.infoContent}>
                 <Text style={styles.infoLabel}>Email</Text>
-                <Text style={styles.infoValue}>{USER_INFO.email}</Text>
+                <Text style={styles.infoValue}>{userInfo.email}</Text>
               </View>
             </View>
 
@@ -83,7 +103,7 @@ const Profile = () => {
               </View>
               <View style={styles.infoContent}>
                 <Text style={styles.infoLabel}>Phone</Text>
-                <Text style={styles.infoValue}>{USER_INFO.phone}</Text>
+                <Text style={styles.infoValue}>{userInfo.phone}</Text>
               </View>
             </View>
           </View>

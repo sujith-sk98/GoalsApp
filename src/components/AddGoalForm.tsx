@@ -17,7 +17,8 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { Theme, Spacing, FontSize, FontWeight, Colors } from '../utils/theme';
-import { MOCK_GOAL_GROUPS, MOCK_FRIENDS, type GoalGroup, type Friend } from '../constants/constants';
+import { type GoalGroup, type Friend } from '../types/storage.types';
+import { useGoals } from '../hooks/useGoals';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type GoalFrequency = 'daily' | 'weekly' | 'monthly';
@@ -45,14 +46,22 @@ const AddGoalForm: React.FC<AddGoalFormProps> = ({
   const [showGroupDropdown, setShowGroupDropdown] = useState(false);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const inset = useSafeAreaInsets();
+  
+  // Use the storage-backed hooks
+  const { groups, friends, refresh } = useGoals();
 
-  // Set default group when modal opens (unless it's the "All" virtual group)
+  // Refresh groups when modal opens and set default group
   useEffect(() => {
-    if (visible && defaultGroup && defaultGroup.id !== 'all') {
-      setSelectedGroup(defaultGroup);
-    } else if (visible) {
-      // Reset to null if "All" is selected or no default
-      setSelectedGroup(null);
+    if (visible) {
+      // Refresh to get latest groups
+      refresh();
+      
+      if (defaultGroup && defaultGroup.id !== 'all') {
+        setSelectedGroup(defaultGroup);
+      } else {
+        // Reset to null if "All" is selected or no default
+        setSelectedGroup(null);
+      }
     }
   }, [visible, defaultGroup]);
 
@@ -103,7 +112,7 @@ const AddGoalForm: React.FC<AddGoalFormProps> = ({
     if (!selectedGroup || selectedGroup.friendIds.length === 0) {
       return [];
     }
-    return MOCK_FRIENDS.filter(friend => selectedGroup.friendIds.includes(friend.id));
+    return friends.filter(friend => selectedGroup.friendIds.includes(friend.id));
   };
 
   const isFormValid = goalTitle.trim() && selectedGroup;
@@ -217,34 +226,51 @@ const AddGoalForm: React.FC<AddGoalFormProps> = ({
 
               {/* Group List Dropdown */}
               {showGroupDropdown && (
-                <View style={styles.groupsList}>
-                  {MOCK_GOAL_GROUPS.length === 0 ? (
-                    <Text style={styles.emptyText}>No groups available</Text>
-                  ) : (
-                    MOCK_GOAL_GROUPS.filter(group => group.id !== 'all').map((group) => (
-                      <TouchableOpacity
-                        key={group.id}
-                        style={styles.groupItem}
-                        onPress={() => {
-                          setSelectedGroup(group);
-                          setShowGroupDropdown(false);
-                        }}
-                        activeOpacity={0.7}
-                      >
-                        <View style={styles.groupInfo}>
-                          <View 
-                            style={[
-                              styles.groupColorIndicator, 
-                              { backgroundColor: group.color || Theme.primary }
-                            ]} 
-                          />
-                          <Text style={styles.groupName}>{group.name}</Text>
-                        </View>
-                        {selectedGroup?.id === group.id && (
-                          <Icon name="check" size={20} color={Theme.primary} />
-                        )}
-                      </TouchableOpacity>
-                    ))
+                <View style={styles.groupsListContainer}>
+                  <ScrollView 
+                    style={styles.groupsList}
+                    nestedScrollEnabled={true}
+                    showsVerticalScrollIndicator={true}
+                    persistentScrollbar={true}
+                    indicatorStyle="black"
+                  >
+                    {groups.length === 0 ? (
+                      <Text style={styles.emptyText}>No groups available</Text>
+                    ) : (
+                      groups.filter(group => group.id !== 'all').map((group, index, arr) => (
+                        <TouchableOpacity
+                          key={group.id}
+                          style={[
+                            styles.groupItem,
+                            index === arr.length - 1 && styles.groupItemLast
+                          ]}
+                          onPress={() => {
+                            setSelectedGroup(group);
+                            setShowGroupDropdown(false);
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <View style={styles.groupInfo}>
+                            <View 
+                              style={[
+                                styles.groupColorIndicator, 
+                                { backgroundColor: group.color || Theme.primary }
+                              ]} 
+                            />
+                            <Text style={styles.groupName}>{group.name}</Text>
+                          </View>
+                          {selectedGroup?.id === group.id && (
+                            <Icon name="check" size={20} color={Theme.primary} />
+                          )}
+                        </TouchableOpacity>
+                      ))
+                    )}
+                  </ScrollView>
+                  {groups.filter(g => g.id !== 'all').length > 4 && (
+                    <View style={styles.scrollHint}>
+                      <Icon name="chevrons-down" size={12} color={Theme.textTertiary} />
+                      <Text style={styles.scrollHintText}>Scroll for more</Text>
+                    </View>
                   )}
                 </View>
               )}
@@ -433,13 +459,28 @@ const styles = StyleSheet.create({
     fontSize: FontSize.base,
     color: Theme.inputPlaceholder,
   },
-  groupsList: {
+  groupsListContainer: {
     marginTop: Spacing.sm,
+  },
+  groupsList: {
     backgroundColor: Theme.background,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: Theme.borderLight,
-    maxHeight: 200,
+    maxHeight: 240, // Slightly increased for better visibility
+  },
+  scrollHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    paddingVertical: Spacing.xs,
+    marginTop: Spacing.xs,
+  },
+  scrollHintText: {
+    fontSize: FontSize.xs,
+    color: Theme.textTertiary,
+    fontStyle: 'italic',
   },
   groupItem: {
     flexDirection: 'row',
@@ -448,6 +489,9 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: Theme.borderLight,
+  },
+  groupItemLast: {
+    borderBottomWidth: 0,
   },
   groupInfo: {
     flexDirection: 'row',

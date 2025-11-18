@@ -18,8 +18,8 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { Theme, Spacing, FontSize, FontWeight, Colors } from '../utils/theme';
-import { USER_INFO } from '../constants/constants';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { GoalStorage } from '../storage';
 
 interface Friend {
   id: string;
@@ -51,12 +51,12 @@ const AddGroupForm: React.FC<AddGroupFormProps> = ({
   onSubmit,
   friends,
 }) => {
-  const isPremium = USER_INFO.isPremium;
   const [groupName, setGroupName] = useState('');
   const [selectedColor, setSelectedColor] = useState(THEME_COLORS[0].color);
   const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
   const [showFriendDropdown, setShowFriendDropdown] = useState(false);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
   const inset = useSafeAreaInsets();
 
   useEffect(() => {
@@ -68,6 +68,14 @@ const AddGroupForm: React.FC<AddGroupFormProps> = ({
       'keyboardDidHide',
       () => setIsKeyboardVisible(false)
     );
+
+    const getUserPremiumStatus = async () => {
+      // Fetch user data from storage or context to determine premium status
+      GoalStorage.getUser().then(user => {
+        setIsPremium(user?.isPremium || false);
+      });
+    };
+    getUserPremiumStatus();
 
     return () => {
       keyboardDidShowListener.remove();

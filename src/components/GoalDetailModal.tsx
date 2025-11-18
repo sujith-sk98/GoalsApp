@@ -17,7 +17,7 @@ import {
 import Icon from 'react-native-vector-icons/Feather';
 import { Theme, Spacing, FontSize, FontWeight, BorderRadius, Colors } from '../utils/theme';
 import GoalItem from './GoalItem';
-import { GoalPeriodCard } from '../constants/constants';
+import { GoalPeriodCard } from '../types/storage.types';
 
 type GoalDetailModalProps = {
   visible: boolean;

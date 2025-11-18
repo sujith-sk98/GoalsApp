@@ -11,14 +11,14 @@ import Icon from 'react-native-vector-icons/Feather';
 import { Theme, Spacing, FontSize, FontWeight, Colors, BorderRadius } from '../../utils/theme';
 import AddGroupForm from '../../components/AddGroupForm';
 import AddFriendForm from '../../components/AddFriendForm';
+import { useGoals } from '../../hooks';
 import AddGoalForm from '../../components/AddGoalForm';
-import { MOCK_FRIENDS, addNewGroup, addNewFriend, addNewGoal } from '../../constants/constants';
 
 const Add = () => {
   const [showAddGoalForm, setShowAddGoalForm] = useState(false);
   const [showAddGroupForm, setShowAddGroupForm] = useState(false);
   const [showAddFriendForm, setShowAddFriendForm] = useState(false);
-
+  const {addGoal: addNewGoal, addGroup: addNewGroup, addFriend: addNewFriend,friends} = useGoals();
   const handleAddGoal = () => {
     setShowAddGoalForm(true);
   };
@@ -147,7 +147,7 @@ const Add = () => {
         visible={showAddGroupForm}
         onClose={() => setShowAddGroupForm(false)}
         onSubmit={handleGroupSubmit}
-        friends={MOCK_FRIENDS}
+        friends={friends}
       />
 
       {/* Add Friend Form Modal */}

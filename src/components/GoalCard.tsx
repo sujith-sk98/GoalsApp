@@ -9,7 +9,7 @@ import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { Theme, Spacing, FontSize, FontWeight, BorderRadius, getShadow, Colors } from '../utils/theme';
-import { GoalPeriodCard } from '../constants/constants';
+import { GoalPeriodCard } from '../types/storage.types';
 
 type GoalCardProps = {
   group: GoalPeriodCard;

@@ -8,8 +8,9 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Modal, FlatList } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { Theme, Spacing, FontSize, FontWeight, BorderRadius, Colors } from '../utils/theme';
-import { GoalGroup } from '../constants/constants';
+import { GoalGroup } from '../types/storage.types';
 import ConfirmDialog from './ConfirmDialog';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type GroupSelectorProps = {
   groups: GoalGroup[];
@@ -23,6 +24,7 @@ const GroupSelector = ({ groups, selectedGroup, onSelectGroup, onDeleteGroup, sh
   const [isOpen, setIsOpen] = useState(false);
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const [groupToDelete, setGroupToDelete] = useState<GoalGroup | null>(null);
+  const inset = useSafeAreaInsets()
 
   // Create "All Groups" option
   const allGroupsOption: GoalGroup = {
@@ -31,6 +33,8 @@ const GroupSelector = ({ groups, selectedGroup, onSelectGroup, onDeleteGroup, sh
     color: Theme.accent,
     friendIds: [],
     cards: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 
   // Combine "All" option with regular groups if enabled
@@ -45,6 +49,10 @@ const GroupSelector = ({ groups, selectedGroup, onSelectGroup, onDeleteGroup, sh
     event.stopPropagation();
     // Prevent deleting the "All" option
     if (group.id === 'all') {
+      return;
+    }
+    // Prevent deleting if only one group exists
+    if (groups.length === 1) {
       return;
     }
     setGroupToDelete(group);
@@ -72,84 +80,125 @@ const GroupSelector = ({ groups, selectedGroup, onSelectGroup, onDeleteGroup, sh
         onPress={() => setIsOpen(true)}
         activeOpacity={0.7}
       >
-        <Text style={styles.selectedText} numberOfLines={1}>
-          {selectedGroup.name}
-        </Text>
-        <Icon name="chevron-down" size={20} color={Theme.textSecondary} />
+        <View style={styles.selectorContent}>
+          <View style={[styles.colorIndicator, { backgroundColor: selectedGroup.color || Theme.primary }]} />
+          <Text style={styles.selectedText} numberOfLines={1}>
+            {selectedGroup.name}
+          </Text>
+        </View>
+        <Icon name="chevron-down" size={18} color={Theme.textPrimary} />
       </TouchableOpacity>
 
       <Modal
         visible={isOpen}
         transparent={true}
-        animationType="fade"
+        animationType="slide"
         onRequestClose={() => setIsOpen(false)}
       >
-        <TouchableOpacity
-          style={styles.overlay}
-          activeOpacity={1}
-          onPress={() => setIsOpen(false)}
-        >
-          <View style={styles.dropdownContainer}>
-            <View style={styles.dropdown}>
-              <View style={styles.dropdownHeader}>
-                <Text style={styles.dropdownTitle}>Select Group</Text>
-                <TouchableOpacity onPress={() => setIsOpen(false)}>
-                  <Icon name="x" size={24} color={Theme.textSecondary} />
-                </TouchableOpacity>
+        <View style={[styles.overlay, { marginBottom: inset.bottom }]}>
+          <TouchableOpacity
+            style={styles.overlayTouchable}
+            activeOpacity={1}
+            onPress={() => setIsOpen(false)}
+          />
+          <View style={styles.modalContainer}>
+            {/* Header */}
+            <View style={styles.modalHeader}>
+              <View style={styles.modalHeaderLeft}>
+                <View style={styles.iconWrapper}>
+                  <Icon name="layers" size={20} color={Theme.primary} />
+                </View>
+                <Text style={styles.modalTitle}>Your Groups</Text>
               </View>
-              
-              <FlatList
-                data={displayGroups}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={[
-                      styles.option,
-                      item.id === selectedGroup.id && styles.selectedOption,
-                    ]}
-                    onPress={() => handleSelect(item)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.optionContent}>
-                      {item.id === 'all' && (
-                        <Icon name="grid" size={18} color={Theme.primary} style={styles.allIcon} />
-                      )}
-                      <Text
-                        style={[
-                          styles.optionText,
-                          item.id === selectedGroup.id && styles.selectedOptionText,
-                        ]}
-                      >
-                        {item.name}
-                      </Text>
-                    </View>
-                    <View style={styles.optionIcons}>
-                      {item.id === selectedGroup.id && (
-                        <Icon name="check" size={20} color={Theme.primary} style={styles.checkIcon} />
-                      )}
-                      {onDeleteGroup && item.id !== 'all' && (
-                        <TouchableOpacity
-                          onPress={(e) => handleDeletePress(item, e)}
-                          style={styles.deleteButton}
-                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                        >
-                          <Icon name="trash-2" size={18} color={Colors.red600} />
-                        </TouchableOpacity>
-                      )}
-                    </View>
-                  </TouchableOpacity>
-                )}
-              />
+              <TouchableOpacity 
+                onPress={() => setIsOpen(false)}
+                style={styles.closeButton}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Icon name="x" size={22} color={Theme.textSecondary} />
+              </TouchableOpacity>
             </View>
+
+            {/* Groups List */}
+            <FlatList
+              data={displayGroups}
+              keyExtractor={(item) => item.id}
+              showsVerticalScrollIndicator={true}
+              contentContainerStyle={styles.listContent}
+                renderItem={({ item, index }) => {
+                  const isSelected = item.id === selectedGroup.id;
+                  const isAllGroup = item.id === 'all';
+                  const canDelete = !isAllGroup && groups.length > 1;
+
+                  return (
+                    <TouchableOpacity
+                      style={[
+                        styles.groupCard,
+                        isSelected && styles.groupCardSelected,
+                        index === displayGroups.length - 1 && styles.groupCardLast,
+                      ]}
+                      onPress={() => handleSelect(item)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.groupCardLeft}>
+                        {isAllGroup ? (
+                          <View style={[styles.groupIcon, { backgroundColor: Theme.primaryLight }]}>
+                            <Icon name="grid" size={18} color={Theme.primary} />
+                          </View>
+                        ) : (
+                          <View style={[styles.groupIcon, { backgroundColor: item.color || Theme.primary }]}>
+                            <Icon name="folder" size={18} color={Colors.white} />
+                          </View>
+                        )}
+                        <View style={styles.groupInfo}>
+                          <Text style={[styles.groupName, isSelected && styles.groupNameSelected]}>
+                            {item.name}
+                          </Text>
+                          {!isAllGroup && (
+                            <Text style={styles.groupMeta}>
+                              {item.cards.reduce((total, card) => total + card.goals.length, 0)} goals
+                            </Text>
+                          )}
+                        </View>
+                      </View>
+
+                      <View style={styles.groupCardRight}>
+                        {isSelected && (
+                          <View style={styles.checkBadge}>
+                            <Icon name="check" size={14} color={Colors.white} />
+                          </View>
+                        )}
+                        {canDelete && onDeleteGroup && (
+                          <TouchableOpacity
+                            onPress={(e) => handleDeletePress(item, e)}
+                            style={[
+                              styles.deleteButton,
+                              groups.length === 1 && styles.deleteButtonDisabled,
+                            ]}
+                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                            disabled={groups.length === 1}
+                          >
+                            <Icon 
+                              name="trash-2" 
+                              size={16} 
+                              color={groups.length === 1 ? Theme.textTertiary : Theme.error} 
+                            />
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                  );
+                }}
+              />
           </View>
-        </TouchableOpacity>
+        </View>
       </Modal>
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         visible={deleteConfirmVisible}
         title="Delete Group"
-        message={groupToDelete ? `Are you sure you want to delete "${groupToDelete.name}"? This action cannot be undone.` : ''}
+        message={groupToDelete ? `Are you sure you want to delete "${groupToDelete.name}"? All goals in this group will be permanently removed.` : ''}
         confirmText="Delete"
         cancelText="Cancel"
         onConfirm={handleConfirmDelete}
@@ -164,89 +213,160 @@ const styles = StyleSheet.create({
   selector: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Theme.backgroundSecondary,
+    justifyContent: 'space-between',
+    backgroundColor: Theme.surfaceElevated,
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.lg,
+    paddingVertical: Spacing.sm + 2,
+    borderRadius: BorderRadius.xl,
     minWidth: 140,
-    maxWidth: 180,
+    maxWidth: 200,
+    borderWidth: 1,
+    borderColor: Theme.borderLight,
+    shadowColor: Theme.shadow,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  selectorContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: Spacing.xs,
+  },
+  colorIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: Spacing.sm,
   },
   selectedText: {
     flex: 1,
     fontSize: FontSize.sm,
     fontWeight: FontWeight.semibold,
     color: Theme.textPrimary,
-    marginRight: Spacing.xs,
   },
   overlay: {
     flex: 1,
     backgroundColor: Theme.overlay,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing.xl,
+    justifyContent: 'flex-end',
   },
-  dropdownContainer: {
-    width: '100%',
-    maxWidth: 320,
+  overlayTouchable: {
+    flex: 1,
   },
-  dropdown: {
+  modalContainer: {
     backgroundColor: Theme.surfaceElevated,
-    borderRadius: BorderRadius.xl,
-    overflow: 'hidden',
-    maxHeight: 400,
+    borderTopLeftRadius: BorderRadius.xxl,
+    borderTopRightRadius: BorderRadius.xxl,
+    maxHeight: '75%',
+    shadowColor: Theme.shadow,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  dropdownHeader: {
+  modalHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: Spacing.lg,
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: Theme.borderLight,
   },
-  dropdownTitle: {
-    fontSize: FontSize.lg,
+  modalHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  iconWrapper: {
+    width: 36,
+    height: 36,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: Theme.primaryLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: FontSize.xl,
     fontWeight: FontWeight.bold,
     color: Theme.textPrimary,
   },
-  option: {
+  closeButton: {
+    padding: Spacing.xs,
+  },
+  listContent: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.xxl,
+  },
+  groupCard: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    backgroundColor: Theme.background,
     padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.borderLight,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.sm,
+    borderWidth: 1.5,
+    borderColor: Theme.borderLight,
   },
-  selectedOption: {
+  groupCardSelected: {
     backgroundColor: Theme.primaryLight,
+    borderColor: Theme.primary,
   },
-  optionContent: {
+  groupCardLast: {
+    marginBottom: 0,
+  },
+  groupCardLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-    gap: Spacing.sm,
+    gap: Spacing.md,
   },
-  allIcon: {
-    marginRight: Spacing.xs,
+  groupIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  optionText: {
-    fontSize: FontSize.base,
-    color: Theme.textPrimary,
+  groupInfo: {
     flex: 1,
   },
-  selectedOptionText: {
+  groupName: {
+    fontSize: FontSize.base,
     fontWeight: FontWeight.semibold,
+    color: Theme.textPrimary,
+    marginBottom: 2,
+  },
+  groupNameSelected: {
     color: Theme.primary,
   },
-  optionIcons: {
+  groupMeta: {
+    fontSize: FontSize.xs,
+    color: Theme.textTertiary,
+    fontWeight: FontWeight.medium,
+  },
+  groupCardRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
+    gap: Spacing.md,
   },
-  checkIcon: {
-    marginRight: Spacing.xs,
+  checkBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Theme.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   deleteButton: {
     padding: Spacing.xs,
+  },
+  deleteButtonDisabled: {
+    opacity: 0.3,
   },
 });
 

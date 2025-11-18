@@ -4,8 +4,8 @@
  * Main screen shown after successful login.
  */
 
-import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, Dimensions, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { StyleSheet, Text, View, FlatList, Dimensions, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useIsFocused } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
@@ -17,7 +17,10 @@ import AddGoalForm from '../../components/AddGoalForm';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import SwipeableTaskItem from '../../components/SwipeableTaskItem';
 import { Goal } from '../../components/GoalItem';
-import { MOCK_GOAL_GROUPS, MOCK_FRIENDS, USER_INFO, GoalPeriodCard, GoalGroup, deleteGroup, addNewGoal, type Friend } from '../../constants/constants';
+import { GoalPeriodCard, GoalGroup, type Friend } from '../../types/storage.types';
+import { useGoals } from '../../hooks/useGoals';
+import { useAutoReset } from '../../hooks/useAutoReset';
+import { initializeAppData } from '../../storage/SeedData';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH * 0.75;
@@ -25,8 +28,19 @@ const CARD_WIDTH = SCREEN_WIDTH * 0.75;
 const Dashboard = () => {
   const isFocused = useIsFocused();
   const flatListRef = useRef<FlatList>(null);
-  const [groups, setGroups] = useState<GoalGroup[]>(MOCK_GOAL_GROUPS);
-  const [selectedGroup, setSelectedGroup] = useState<GoalGroup>(MOCK_GOAL_GROUPS[0]);
+  
+  // Use the storage-backed hooks
+  const { groups, friends, loading, refresh, deleteGroup: removeGroup, addGoal, toggleGoal: toggleGoalStorage, removeFriendFromGroup: removeFriendFromGroupStorage } = useGoals();
+  
+  // Initialize app data and auto-reset on mount and app state changes
+  useAutoReset({
+    onResetComplete: () => {
+      console.log('✅ Goals have been reset');
+      refresh(); // Refresh data after reset
+    },
+  });
+  
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [selectedCard, setSelectedCard] = useState<GoalPeriodCard | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [showAddGoalForm, setShowAddGoalForm] = useState(false);
@@ -35,14 +49,24 @@ const Dashboard = () => {
   const [friendToRemove, setFriendToRemove] = useState<Friend | null>(null);
   const [taskFilters, setTaskFilters] = useState<Set<'daily' | 'weekly' | 'monthly'>>(new Set());
 
+  // Initialize app data on first mount
+  useEffect(() => {
+    const init = async () => {
+      await initializeAppData();
+      await refresh();
+    };
+    init();
+  }, []);
+
   // Create virtual "ALL" group that aggregates all groups
-  const createAllGroup = (): GoalGroup => {
+  const createAllGroup = useMemo((): GoalGroup => {
     const allDailyGoals: Goal[] = [];
     const allWeeklyGoals: Goal[] = [];
     const allMonthlyGoals: Goal[] = [];
     const allFriendIds = new Set<string>();
+    const now = new Date().toISOString();
 
-    MOCK_GOAL_GROUPS.forEach(group => {
+    groups.forEach(group => {
       group.friendIds.forEach(id => allFriendIds.add(id));
       
       const dailyCard = group.cards.find(c => c.period === 'daily');
@@ -59,6 +83,8 @@ const Dashboard = () => {
       name: 'All Groups',
       color: Theme.accent,
       friendIds: Array.from(allFriendIds),
+      createdAt: now,
+      updatedAt: now,
       cards: [
         {
           id: 'all-daily',
@@ -83,24 +109,26 @@ const Dashboard = () => {
         },
       ],
     };
-  };
+  }, [groups]);
 
-  // Refresh groups when screen comes into focus
+  // Get the current selected group based on selectedGroupId
+  const selectedGroup = useMemo(() => {
+    if (!selectedGroupId) return null;
+    if (selectedGroupId === 'all') return createAllGroup;
+    return groups.find(g => g.id === selectedGroupId) || null;
+  }, [selectedGroupId, groups, createAllGroup]);
+
+  // Set initial selected group when groups load
+  useEffect(() => {
+    if (groups.length > 0 && !selectedGroupId) {
+      setSelectedGroupId(groups[0].id);
+    }
+  }, [groups, selectedGroupId]);
+
+  // Refresh when screen comes into focus
   useEffect(() => {
     if (isFocused) {
-      setGroups([...MOCK_GOAL_GROUPS]);
-      // Update selected group if it still exists
-      if (selectedGroup.id === 'all') {
-        // If "All" was selected, recreate it with updated data
-        setSelectedGroup(createAllGroup());
-      } else {
-        const updatedGroup = MOCK_GOAL_GROUPS.find(g => g.id === selectedGroup.id);
-        if (updatedGroup) {
-          setSelectedGroup(updatedGroup);
-        } else if (MOCK_GOAL_GROUPS.length > 0) {
-          setSelectedGroup(MOCK_GOAL_GROUPS[0]);
-        }
-      }
+      refresh();
     }
   }, [isFocused]);
 
@@ -114,81 +142,68 @@ const Dashboard = () => {
     setTimeout(() => setSelectedCard(null), 300);
   };
 
-  const handleDeleteGroup = (groupId: string) => {
-    const success = deleteGroup(groupId);
+  const handleDeleteGroup = async (groupId: string) => {
+    const success = await removeGroup(groupId);
     if (success) {
-      // Update local state
-      const updatedGroups = MOCK_GOAL_GROUPS;
-      setGroups([...updatedGroups]);
-      
-      // If deleted group was selected, select the first available group or recreate ALL
-      if (selectedGroup.id === groupId) {
-        if (updatedGroups.length > 0) {
-          setSelectedGroup(updatedGroups[0]);
+      // If deleted group was selected, select the first available group
+      if (selectedGroupId === groupId) {
+        if (groups.length > 1) {
+          // Find first group that isn't the deleted one
+          const nextGroup = groups.find(g => g.id !== groupId);
+          setSelectedGroupId(nextGroup?.id || null);
+        } else {
+          setSelectedGroupId(null);
         }
-      } else if (selectedGroup.id === 'all') {
-        // Recreate ALL group with updated data
-        setSelectedGroup(createAllGroup());
       }
+      // Refresh to get updated data
+      await refresh();
     }
   };
 
-  const handleGoalSubmit = (goalData: { 
+  const handleGoalSubmit = async (goalData: { 
     title: string; 
     frequency: 'daily' | 'weekly' | 'monthly'; 
     groupId: string;
   }) => {
-    const newGoal = addNewGoal(goalData.title, goalData.frequency, goalData.groupId);
+    const newGoal = await addGoal(goalData.groupId, goalData.frequency, goalData.title);
     console.log('New goal created:', newGoal);
     
-    // Update local state
-    setGroups([...MOCK_GOAL_GROUPS]);
-    
-    // Update selected group
-    if (selectedGroup.id === 'all') {
-      // Recreate ALL group with new goal included
-      setSelectedGroup(createAllGroup());
-    } else {
-      // Update selected group to the one where goal was added
-      const updatedGroup = MOCK_GOAL_GROUPS.find(g => g.id === goalData.groupId);
-      if (updatedGroup) {
-        setSelectedGroup(updatedGroup);
-      }
-    }
+    // Refresh data - the useEffect will update selectedGroup automatically
+    await refresh();
   };
 
-  const handleToggleGoal = (goalId: string, cardId: string) => {
-    // For "All" group, we need to find the goal across all groups
+  const handleToggleGoal = async (goalId: string, cardId: string) => {
+    if (!selectedGroup) return;
+    
+    // If we're in "All" view, we need to find which group this goal belongs to
+    let targetGroupId = selectedGroup.id;
+    
     if (selectedGroup.id === 'all') {
-      let found = false;
-      MOCK_GOAL_GROUPS.forEach(group => {
-        group.cards.forEach(card => {
-          const goal = card.goals.find(g => g.id === goalId);
-          if (goal) {
-            goal.completed = !goal.completed;
-            found = true;
+      // Find the actual group that contains this goal
+      for (const group of groups) {
+        const card = group.cards.find(c => c.id === cardId);
+        if (card) {
+          const hasGoal = card.goals.some(g => g.id === goalId);
+          if (hasGoal) {
+            targetGroupId = group.id;
+            break;
           }
-        });
-      });
-      if (found) {
-        setGroups([...MOCK_GOAL_GROUPS]);
-        // Recreate ALL group to reflect the change
-        setSelectedGroup(createAllGroup());
-      }
-    } else {
-      // For specific group, find in that group only
-      const card = selectedGroup.cards.find(c => c.id === cardId);
-      if (card) {
-        const goal = card.goals.find(g => g.id === goalId);
-        if (goal) {
-          goal.completed = !goal.completed;
-          setGroups([...MOCK_GOAL_GROUPS]);
         }
       }
+    }
+    
+    // Toggle the goal
+    const success = await toggleGoalStorage(targetGroupId, cardId, goalId);
+    
+    if (success) {
+      // Refresh data - the useEffect will update selectedGroup automatically
+      await refresh();
     }
   };
 
   const getPendingGoals = (): Array<{ goal: Goal; cardTitle: string; cardId: string; frequency: 'daily' | 'weekly' | 'monthly' }> => {
+    if (!selectedGroup) return [];
+    
     const pending: Array<{ goal: Goal; cardTitle: string; cardId: string; frequency: 'daily' | 'weekly' | 'monthly' }> = [];
     selectedGroup.cards.forEach(card => {
       // Determine frequency from card title
@@ -214,6 +229,13 @@ const Dashboard = () => {
     return pending;
   };
 
+  const getTotalGoalsCount = (): number => {
+    if (!selectedGroup) return 0;
+    return selectedGroup.cards.reduce((total, card) => total + card.goals.length, 0);
+  };
+
+  const hasAnyGoals = getTotalGoalsCount() > 0;
+
   const toggleTaskFilter = (filter: 'daily' | 'weekly' | 'monthly') => {
     const newFilters = new Set(taskFilters);
     if (newFilters.has(filter)) {
@@ -225,28 +247,25 @@ const Dashboard = () => {
   };
 
   const getGroupFriends = (): Friend[] => {
-    if (selectedGroup.id === 'all') {
-      // For ALL group, return all unique friends
-      return MOCK_FRIENDS.filter(friend => selectedGroup.friendIds.includes(friend.id));
-    }
-    return MOCK_FRIENDS.filter(friend => selectedGroup.friendIds.includes(friend.id));
+    if (!selectedGroup) return [];
+    
+    return friends.filter(friend => selectedGroup.friendIds.includes(friend.id));
   };
 
   const handleRemoveFriend = (friend: Friend) => {
     // Can't remove friends from ALL group
-    if (selectedGroup.id === 'all') {
+    if (!selectedGroup || selectedGroup.id === 'all') {
       return;
     }
     setFriendToRemove(friend);
     setShowRemoveFriendDialog(true);
   };
 
-  const confirmRemoveFriend = () => {
-    if (friendToRemove) {
-      const index = selectedGroup.friendIds.indexOf(friendToRemove.id);
-      if (index > -1) {
-        selectedGroup.friendIds.splice(index, 1);
-        setGroups([...MOCK_GOAL_GROUPS]);
+  const confirmRemoveFriend = async () => {
+    if (friendToRemove && selectedGroup && selectedGroup.id !== 'all') {
+      const success = await removeFriendFromGroupStorage(selectedGroup.id, friendToRemove.id);
+      if (success) {
+        await refresh();
       }
     }
     setShowRemoveFriendDialog(false);
@@ -272,60 +291,98 @@ const Dashboard = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Header with Greeting and Group Selector */}
-        <View style={styles.header}>
-          <View style={styles.greetingSection}>
-            <Text style={styles.greeting}>{USER_INFO.greeting}</Text>
-            <Text style={styles.name}>{USER_INFO.name}!</Text>
-          </View>
-          <GroupSelector
-            groups={groups}
-            selectedGroup={selectedGroup}
-            onSelectGroup={(group) => {
-              if (group.id === 'all') {
-                setSelectedGroup(createAllGroup());
-              } else {
-                setSelectedGroup(group);
-              }
-            }}
-            onDeleteGroup={handleDeleteGroup}
-            showAllOption={true}
-          />
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Theme.primary} />
+          <Text style={styles.loadingText}>Loading your goals...</Text>
         </View>
-
-        {/* Goal Cards Carousel */}
-        <View style={styles.carouselSection}>
-          <FlatList
-            ref={flatListRef}
-            data={selectedGroup.cards}
-            renderItem={renderGoalCard}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            snapToInterval={CARD_WIDTH + Spacing.lg}
-            decelerationRate="fast"
-            contentContainerStyle={styles.carouselContent}
-            pagingEnabled={false}
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
-          />
-        </View>
-
-        {/* Pagination Dots */}
-        <View style={styles.paginationContainer}>
-          <View style={styles.paginationDots}>
-            {selectedGroup.cards.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.dot,
-                  index === activeIndex ? styles.activeDot : styles.inactiveDot,
-                ]}
+      ) : (
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+          {/* Header with Greeting and Group Selector */}
+          <View style={styles.header}>
+            <View style={styles.greetingSection}>
+              <Text style={styles.greeting}>Welcome back</Text>
+              <Text style={styles.name}>Sujith!</Text>
+            </View>
+            {selectedGroup && (
+              <GroupSelector
+                groups={groups}
+                selectedGroup={selectedGroup}
+                onSelectGroup={(group) => {
+                  setSelectedGroupId(group.id);
+                }}
+                onDeleteGroup={handleDeleteGroup}
+                showAllOption={true}
               />
-            ))}
+            )}
           </View>
-        </View>
+
+          {selectedGroup && (
+            <>
+              {/* Goal Cards Carousel */}
+              <View style={styles.carouselSection}>
+                <FlatList
+                  ref={flatListRef}
+                  data={selectedGroup.cards}
+                  renderItem={renderGoalCard}
+                  keyExtractor={(item) => item.id}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  snapToInterval={CARD_WIDTH + Spacing.lg}
+                  decelerationRate="fast"
+                  contentContainerStyle={styles.carouselContent}
+                  pagingEnabled={false}
+                  onScroll={handleScroll}
+                  scrollEventThrottle={16}
+                />
+              </View>
+
+              {/* Pagination Dots */}
+              <View style={styles.paginationContainer}>
+                <View style={styles.paginationDots}>
+                  {selectedGroup.cards.map((_, index) => (
+                    <View
+                      key={index}
+                      style={[
+                        styles.dot,
+                        index === activeIndex ? styles.activeDot : styles.inactiveDot,
+                      ]}
+                    />
+                  ))}
+                </View>
+              </View>
+            </>
+          )}
+
+        {/* Empty State - Show when no goals exist */}
+        {!hasAnyGoals && selectedGroup && (
+          <View style={styles.emptyStateContainer}>
+            <View style={styles.emptyStateIconContainer}>
+              <Icon name="target" size={64} color={Theme.primary} style={styles.emptyStateIcon} />
+              <View style={styles.emptyStateBadge}>
+                <Icon name="plus" size={20} color={Colors.white} />
+              </View>
+            </View>
+            <Text style={styles.emptyStateTitle}>No Goals Yet!</Text>
+            <Text style={styles.emptyStateSubtitle}>
+              Start your journey by creating your first goal.{'\n'}
+            </Text>
+            <View style={styles.emptyStateFeatures}>
+              <View style={styles.emptyStateFeature}>
+                <Icon name="check-circle" size={20} color={Theme.primary} />
+                <Text style={styles.emptyStateFeatureText}>Track your progress</Text>
+              </View>
+              <View style={styles.emptyStateFeature}>
+                <Icon name="calendar" size={20} color={Theme.primary} />
+                <Text style={styles.emptyStateFeatureText}>Set flexible schedules</Text>
+              </View>
+              <View style={styles.emptyStateFeature}>
+                <Icon name="trending-up" size={20} color={Theme.primary} />
+                <Text style={styles.emptyStateFeatureText}>Build better habits</Text>
+              </View>
+            </View>
+          </View>
+        )}
 
         {/* Create New Goal Button */}
         <View style={styles.addGoalSection}>
@@ -457,7 +514,7 @@ const Dashboard = () => {
                     <View style={[styles.friendAvatar, { backgroundColor: Theme.primary }]}>
                       <Text style={styles.friendInitial}>{getInitials(friend.name)}</Text>
                     </View>
-                    {selectedGroup.id !== 'all' && (
+                    {selectedGroup && selectedGroup.id !== 'all' && (
                       <TouchableOpacity
                         style={styles.removeFriendButton}
                         onPress={() => handleRemoveFriend(friend)}
@@ -478,6 +535,7 @@ const Dashboard = () => {
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
+      )}
 
       {/* Goal Detail Modal */}
       <GoalDetailModal
@@ -491,7 +549,7 @@ const Dashboard = () => {
         visible={showAddGoalForm}
         onClose={() => setShowAddGoalForm(false)}
         onSubmit={handleGoalSubmit}
-        defaultGroup={selectedGroup.id !== 'all' ? selectedGroup : undefined}
+        defaultGroup={selectedGroup && selectedGroup.id !== 'all' ? selectedGroup : undefined}
       />
 
       {/* Remove Friend Confirmation */}
@@ -516,6 +574,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Theme.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.xl,
+  },
+  loadingText: {
+    fontSize: FontSize.lg,
+    color: Theme.textSecondary,
+    marginTop: Spacing.md,
   },
   scrollContent: {
     paddingTop: Spacing.md,
@@ -734,6 +803,74 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Theme.textSecondary,
     textAlign: 'center',
+    fontWeight: FontWeight.medium,
+  },
+  // Empty State Styles
+  emptyStateContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.xl ,
+    marginHorizontal: Spacing.xl,
+    marginVertical: Spacing.md,
+    backgroundColor: Theme.background,
+    borderRadius: BorderRadius.xl,
+    borderWidth: 2,
+    borderColor: Theme.borderLight,
+    borderStyle: 'dashed',
+  },
+  emptyStateIconContainer: {
+    position: 'relative',
+    marginBottom: Spacing.lg,
+  },
+  emptyStateIcon: {
+    opacity: 0.3,
+  },
+  emptyStateBadge: {
+    position: 'absolute',
+    bottom: -8,
+    right: -8,
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Theme.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: Theme.background,
+    shadowColor: Theme.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  emptyStateTitle: {
+    fontSize: FontSize.xxxl,
+    fontWeight: FontWeight.bold,
+    color: Theme.textPrimary,
+    marginBottom: Spacing.sm,
+    textAlign: 'center',
+  },
+  emptyStateSubtitle: {
+    fontSize: FontSize.base,
+    color: Theme.textTertiary,
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: Spacing.md,
+  },
+  emptyStateFeatures: {
+    width: '100%',
+    gap: Spacing.md,
+  },
+  emptyStateFeature: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  emptyStateFeatureText: {
+    fontSize: FontSize.base,
+    color: Theme.textSecondary,
     fontWeight: FontWeight.medium,
   },
 });
