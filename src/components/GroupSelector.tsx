@@ -4,7 +4,7 @@
  * Dropdown selector for choosing between different goal groups.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Modal, FlatList } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { Theme, Spacing, FontSize, FontWeight, BorderRadius, Colors } from '../utils/theme';
@@ -16,12 +16,25 @@ type GroupSelectorProps = {
   selectedGroup: GoalGroup;
   onSelectGroup: (group: GoalGroup) => void;
   onDeleteGroup?: (groupId: string) => void;
+  showAllOption?: boolean;
 };
 
-const GroupSelector = ({ groups, selectedGroup, onSelectGroup, onDeleteGroup }: GroupSelectorProps) => {
+const GroupSelector = ({ groups, selectedGroup, onSelectGroup, onDeleteGroup, showAllOption = false }: GroupSelectorProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const [groupToDelete, setGroupToDelete] = useState<GoalGroup | null>(null);
+
+  // Create "All Groups" option
+  const allGroupsOption: GoalGroup = {
+    id: 'all',
+    name: 'All Groups',
+    color: '#10b981', // Colors.mint700
+    friendIds: [],
+    cards: [],
+  };
+
+  // Combine "All" option with regular groups if enabled
+  const displayGroups = showAllOption ? [allGroupsOption, ...groups] : groups;
 
   const handleSelect = (group: GoalGroup) => {
     onSelectGroup(group);
@@ -30,6 +43,10 @@ const GroupSelector = ({ groups, selectedGroup, onSelectGroup, onDeleteGroup }: 
 
   const handleDeletePress = (group: GoalGroup, event: any) => {
     event.stopPropagation();
+    // Prevent deleting the "All" option
+    if (group.id === 'all') {
+      return;
+    }
     setGroupToDelete(group);
     setDeleteConfirmVisible(true);
   };
@@ -47,10 +64,6 @@ const GroupSelector = ({ groups, selectedGroup, onSelectGroup, onDeleteGroup }: 
     setDeleteConfirmVisible(false);
     setGroupToDelete(null);
   };
-
-  useEffect(() => {
-
-  })
 
   return (
     <View>
@@ -86,7 +99,7 @@ const GroupSelector = ({ groups, selectedGroup, onSelectGroup, onDeleteGroup }: 
               </View>
               
               <FlatList
-                data={groups}
+                data={displayGroups}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
                   <TouchableOpacity
@@ -97,19 +110,24 @@ const GroupSelector = ({ groups, selectedGroup, onSelectGroup, onDeleteGroup }: 
                     onPress={() => handleSelect(item)}
                     activeOpacity={0.7}
                   >
-                    <Text
-                      style={[
-                        styles.optionText,
-                        item.id === selectedGroup.id && styles.selectedOptionText,
-                      ]}
-                    >
-                      {item.name}
-                    </Text>
+                    <View style={styles.optionContent}>
+                      {item.id === 'all' && (
+                        <Icon name="grid" size={18} color={Theme.primary} style={styles.allIcon} />
+                      )}
+                      <Text
+                        style={[
+                          styles.optionText,
+                          item.id === selectedGroup.id && styles.selectedOptionText,
+                        ]}
+                      >
+                        {item.name}
+                      </Text>
+                    </View>
                     <View style={styles.optionIcons}>
                       {item.id === selectedGroup.id && (
                         <Icon name="check" size={20} color={Theme.primary} style={styles.checkIcon} />
                       )}
-                      {onDeleteGroup && (
+                      {onDeleteGroup && item.id !== 'all' && (
                         <TouchableOpacity
                           onPress={(e) => handleDeletePress(item, e)}
                           style={styles.deleteButton}
@@ -200,6 +218,15 @@ const styles = StyleSheet.create({
   },
   selectedOption: {
     backgroundColor: Theme.primaryLight,
+  },
+  optionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: Spacing.sm,
+  },
+  allIcon: {
+    marginRight: Spacing.xs,
   },
   optionText: {
     fontSize: FontSize.base,

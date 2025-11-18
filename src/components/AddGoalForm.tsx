@@ -46,10 +46,13 @@ const AddGoalForm: React.FC<AddGoalFormProps> = ({
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const inset = useSafeAreaInsets();
 
-  // Set default group when modal opens
+  // Set default group when modal opens (unless it's the "All" virtual group)
   useEffect(() => {
-    if (visible && defaultGroup) {
+    if (visible && defaultGroup && defaultGroup.id !== 'all') {
       setSelectedGroup(defaultGroup);
+    } else if (visible) {
+      // Reset to null if "All" is selected or no default
+      setSelectedGroup(null);
     }
   }, [visible, defaultGroup]);
 
@@ -218,7 +221,7 @@ const AddGoalForm: React.FC<AddGoalFormProps> = ({
                   {MOCK_GOAL_GROUPS.length === 0 ? (
                     <Text style={styles.emptyText}>No groups available</Text>
                   ) : (
-                    MOCK_GOAL_GROUPS.map((group) => (
+                    MOCK_GOAL_GROUPS.filter(group => group.id !== 'all').map((group) => (
                       <TouchableOpacity
                         key={group.id}
                         style={styles.groupItem}

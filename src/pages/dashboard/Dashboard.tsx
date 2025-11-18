@@ -35,16 +35,71 @@ const Dashboard = () => {
   const [friendToRemove, setFriendToRemove] = useState<Friend | null>(null);
   const [taskFilters, setTaskFilters] = useState<Set<'daily' | 'weekly' | 'monthly'>>(new Set());
 
+  // Create virtual "ALL" group that aggregates all groups
+  const createAllGroup = (): GoalGroup => {
+    const allDailyGoals: Goal[] = [];
+    const allWeeklyGoals: Goal[] = [];
+    const allMonthlyGoals: Goal[] = [];
+    const allFriendIds = new Set<string>();
+
+    MOCK_GOAL_GROUPS.forEach(group => {
+      group.friendIds.forEach(id => allFriendIds.add(id));
+      
+      const dailyCard = group.cards.find(c => c.period === 'daily');
+      const weeklyCard = group.cards.find(c => c.period === 'weekly');
+      const monthlyCard = group.cards.find(c => c.period === 'monthly');
+
+      if (dailyCard) allDailyGoals.push(...dailyCard.goals);
+      if (weeklyCard) allWeeklyGoals.push(...weeklyCard.goals);
+      if (monthlyCard) allMonthlyGoals.push(...monthlyCard.goals);
+    });
+
+    return {
+      id: 'all',
+      name: 'All Groups',
+      color: Colors.mint700,
+      friendIds: Array.from(allFriendIds),
+      cards: [
+        {
+          id: 'all-daily',
+          period: 'daily',
+          title: 'Daily Goals (All)',
+          color: Colors.mint700,
+          goals: allDailyGoals,
+        },
+        {
+          id: 'all-weekly',
+          period: 'weekly',
+          title: 'Weekly Goals (All)',
+          color: Colors.mint700,
+          goals: allWeeklyGoals,
+        },
+        {
+          id: 'all-monthly',
+          period: 'monthly',
+          title: 'Monthly Goals (All)',
+          color: Colors.mint700,
+          goals: allMonthlyGoals,
+        },
+      ],
+    };
+  };
+
   // Refresh groups when screen comes into focus
   useEffect(() => {
     if (isFocused) {
       setGroups([...MOCK_GOAL_GROUPS]);
       // Update selected group if it still exists
-      const updatedGroup = MOCK_GOAL_GROUPS.find(g => g.id === selectedGroup.id);
-      if (updatedGroup) {
-        setSelectedGroup(updatedGroup);
-      } else if (MOCK_GOAL_GROUPS.length > 0) {
-        setSelectedGroup(MOCK_GOAL_GROUPS[0]);
+      if (selectedGroup.id === 'all') {
+        // If "All" was selected, recreate it with updated data
+        setSelectedGroup(createAllGroup());
+      } else {
+        const updatedGroup = MOCK_GOAL_GROUPS.find(g => g.id === selectedGroup.id);
+        if (updatedGroup) {
+          setSelectedGroup(updatedGroup);
+        } else if (MOCK_GOAL_GROUPS.length > 0) {
+          setSelectedGroup(MOCK_GOAL_GROUPS[0]);
+        }
       }
     }
   }, [isFocused]);
@@ -66,9 +121,14 @@ const Dashboard = () => {
       const updatedGroups = MOCK_GOAL_GROUPS;
       setGroups([...updatedGroups]);
       
-      // If deleted group was selected, select the first available group
-      if (selectedGroup.id === groupId && updatedGroups.length > 0) {
-        setSelectedGroup(updatedGroups[0]);
+      // If deleted group was selected, select the first available group or recreate ALL
+      if (selectedGroup.id === groupId) {
+        if (updatedGroups.length > 0) {
+          setSelectedGroup(updatedGroups[0]);
+        }
+      } else if (selectedGroup.id === 'all') {
+        // Recreate ALL group with updated data
+        setSelectedGroup(createAllGroup());
       }
     }
   };
@@ -84,20 +144,46 @@ const Dashboard = () => {
     // Update local state
     setGroups([...MOCK_GOAL_GROUPS]);
     
-    // Update selected group to the one where goal was added
-    const updatedGroup = MOCK_GOAL_GROUPS.find(g => g.id === goalData.groupId);
-    if (updatedGroup) {
-      setSelectedGroup(updatedGroup);
+    // Update selected group
+    if (selectedGroup.id === 'all') {
+      // Recreate ALL group with new goal included
+      setSelectedGroup(createAllGroup());
+    } else {
+      // Update selected group to the one where goal was added
+      const updatedGroup = MOCK_GOAL_GROUPS.find(g => g.id === goalData.groupId);
+      if (updatedGroup) {
+        setSelectedGroup(updatedGroup);
+      }
     }
   };
 
   const handleToggleGoal = (goalId: string, cardId: string) => {
-    const card = selectedGroup.cards.find(c => c.id === cardId);
-    if (card) {
-      const goal = card.goals.find(g => g.id === goalId);
-      if (goal) {
-        goal.completed = !goal.completed;
+    // For "All" group, we need to find the goal across all groups
+    if (selectedGroup.id === 'all') {
+      let found = false;
+      MOCK_GOAL_GROUPS.forEach(group => {
+        group.cards.forEach(card => {
+          const goal = card.goals.find(g => g.id === goalId);
+          if (goal) {
+            goal.completed = !goal.completed;
+            found = true;
+          }
+        });
+      });
+      if (found) {
         setGroups([...MOCK_GOAL_GROUPS]);
+        // Recreate ALL group to reflect the change
+        setSelectedGroup(createAllGroup());
+      }
+    } else {
+      // For specific group, find in that group only
+      const card = selectedGroup.cards.find(c => c.id === cardId);
+      if (card) {
+        const goal = card.goals.find(g => g.id === goalId);
+        if (goal) {
+          goal.completed = !goal.completed;
+          setGroups([...MOCK_GOAL_GROUPS]);
+        }
       }
     }
   };
@@ -139,10 +225,18 @@ const Dashboard = () => {
   };
 
   const getGroupFriends = (): Friend[] => {
+    if (selectedGroup.id === 'all') {
+      // For ALL group, return all unique friends
+      return MOCK_FRIENDS.filter(friend => selectedGroup.friendIds.includes(friend.id));
+    }
     return MOCK_FRIENDS.filter(friend => selectedGroup.friendIds.includes(friend.id));
   };
 
   const handleRemoveFriend = (friend: Friend) => {
+    // Can't remove friends from ALL group
+    if (selectedGroup.id === 'all') {
+      return;
+    }
     setFriendToRemove(friend);
     setShowRemoveFriendDialog(true);
   };
@@ -188,8 +282,15 @@ const Dashboard = () => {
           <GroupSelector
             groups={groups}
             selectedGroup={selectedGroup}
-            onSelectGroup={setSelectedGroup}
+            onSelectGroup={(group) => {
+              if (group.id === 'all') {
+                setSelectedGroup(createAllGroup());
+              } else {
+                setSelectedGroup(group);
+              }
+            }}
             onDeleteGroup={handleDeleteGroup}
+            showAllOption={true}
           />
         </View>
 
@@ -356,13 +457,15 @@ const Dashboard = () => {
                     <View style={[styles.friendAvatar, { backgroundColor: Colors.mint600 }]}>
                       <Text style={styles.friendInitial}>{getInitials(friend.name)}</Text>
                     </View>
-                    <TouchableOpacity
-                      style={styles.removeFriendButton}
-                      onPress={() => handleRemoveFriend(friend)}
-                      activeOpacity={0.7}
-                    >
-                      <Icon name="x" size={12} color={Colors.white} />
-                    </TouchableOpacity>
+                    {selectedGroup.id !== 'all' && (
+                      <TouchableOpacity
+                        style={styles.removeFriendButton}
+                        onPress={() => handleRemoveFriend(friend)}
+                        activeOpacity={0.7}
+                      >
+                        <Icon name="x" size={12} color={Colors.white} />
+                      </TouchableOpacity>
+                    )}
                   </View>
                   <Text style={styles.friendName} numberOfLines={1}>
                     {friend.name.split(' ')[0]}
@@ -388,7 +491,7 @@ const Dashboard = () => {
         visible={showAddGoalForm}
         onClose={() => setShowAddGoalForm(false)}
         onSubmit={handleGoalSubmit}
-        defaultGroup={selectedGroup}
+        defaultGroup={selectedGroup.id !== 'all' ? selectedGroup : undefined}
       />
 
       {/* Remove Friend Confirmation */}
