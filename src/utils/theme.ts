@@ -73,6 +73,7 @@ export const Colors = {
   mint700: '#477270',
   mint800: '#355856',
   mint900: '#2A4644',
+  
 };
 
 /**
@@ -85,6 +86,11 @@ export const LightTheme = {
   backgroundSecondary: Colors.mint50,
   backgroundTertiary: Colors.mint100,
   backgroundPale: '#FAFBFB', // Very light gray for dashboard
+  
+  // Card & Surface colors
+  cardBackground: '#EFF7F6', // Pale mint background for cards
+  surfaceElevated: Colors.white,
+  surfaceOverlay: 'rgba(0, 0, 0, 0.5)',
 
   // Text
   textPrimary: '#333333',
@@ -92,11 +98,13 @@ export const LightTheme = {
   textTertiary: '#93A3A0',
   textDisabled: Colors.gray400,
   textInverse: Colors.white,
+  textPlaceholder: '#93A3A0',
 
   // Borders
   border: Colors.gray300,
   borderLight: Colors.gray200,
   borderFocus: Colors.mint400,
+  borderDark: Colors.gray400,
 
   // Interactive elements - Using Mint as primary
   primary: Colors.mint400,
@@ -104,15 +112,23 @@ export const LightTheme = {
   primaryLight: Colors.mint100,
   primaryBorder: Colors.mint200,
   primaryDisabled: '#C5D9D6',
+  primaryDark: Colors.mint700,
+
+  // Secondary accent colors
+  accent: Colors.mint700,
+  accentLight: Colors.mint200,
+  accentHover: Colors.mint600,
 
   // Status colors
   success: Colors.green600,
   successLight: Colors.green50,
   successBorder: Colors.green100,
+  successDark: Colors.green700,
 
   error: Colors.red600,
   errorLight: Colors.red50,
   errorBorder: Colors.red100,
+  errorDark: Colors.red700,
 
   warning: Colors.yellow600,
   warningLight: Colors.yellow50,
@@ -128,10 +144,39 @@ export const LightTheme = {
   inputPlaceholder: '#93A3A0',
   inputText: '#333333',
   inputFocus: Colors.mint400,
+  inputDisabled: Colors.gray100,
+
+  // Button states
+  buttonPrimary: Colors.mint700,
+  buttonPrimaryHover: Colors.mint600,
+  buttonPrimaryText: Colors.white,
+  buttonSecondary: Colors.white,
+  buttonSecondaryBorder: Colors.gray300,
+  buttonSecondaryText: Colors.gray700,
+  buttonDisabled: '#E5E7EB',
+  buttonDisabledText: Colors.gray400,
+
+  // Icon colors
+  iconPrimary: Colors.mint400,
+  iconSecondary: Colors.gray600,
+  iconTertiary: '#93A3A0',
+  iconInverse: Colors.white,
+
+  // Badge & Tag colors
+  badgeBackground: Colors.mint400,
+  badgeText: Colors.white,
+  tagBackground: Colors.mint100,
+  tagText: Colors.mint700,
 
   // Shadows & overlays
   shadow: 'rgba(0, 0, 0, 0.1)',
+  shadowDark: 'rgba(0, 0, 0, 0.2)',
   overlay: 'rgba(0, 0, 0, 0.5)',
+  overlayLight: 'rgba(0, 0, 0, 0.3)',
+
+  // Dividers
+  divider: Colors.gray200,
+  dividerDark: Colors.gray300,
 };
 
 /**
@@ -143,6 +188,12 @@ export const DarkTheme = {
   background: Colors.gray900,
   backgroundSecondary: Colors.gray800,
   backgroundTertiary: Colors.gray700,
+  backgroundPale: '#1A1D23',
+  
+  // Card & Surface colors
+  cardBackground: Colors.gray800,
+  surfaceElevated: Colors.gray700,
+  surfaceOverlay: 'rgba(0, 0, 0, 0.7)',
 
   // Text
   textPrimary: Colors.gray50,
@@ -150,26 +201,37 @@ export const DarkTheme = {
   textTertiary: Colors.gray400,
   textDisabled: Colors.gray500,
   textInverse: Colors.gray900,
+  textPlaceholder: Colors.gray500,
 
   // Borders
   border: Colors.gray600,
   borderLight: Colors.gray700,
   borderFocus: Colors.blue400,
+  borderDark: Colors.gray500,
 
   // Interactive elements
   primary: Colors.blue500,
   primaryHover: Colors.blue400,
   primaryLight: Colors.blue900,
   primaryBorder: Colors.blue700,
+  primaryDisabled: Colors.gray700,
+  primaryDark: Colors.blue600,
+
+  // Secondary accent colors
+  accent: Colors.blue400,
+  accentLight: Colors.blue800,
+  accentHover: Colors.blue300,
 
   // Status colors
   success: Colors.green500,
   successLight: Colors.green700,
   successBorder: Colors.green700,
+  successDark: Colors.green600,
 
   error: Colors.red500,
   errorLight: Colors.red700,
   errorBorder: Colors.red700,
+  errorDark: Colors.red600,
 
   warning: Colors.yellow500,
   warningLight: Colors.yellow600,
@@ -185,10 +247,39 @@ export const DarkTheme = {
   inputPlaceholder: Colors.gray500,
   inputText: Colors.gray50,
   inputFocus: Colors.blue400,
+  inputDisabled: Colors.gray700,
+
+  // Button states
+  buttonPrimary: Colors.blue600,
+  buttonPrimaryHover: Colors.blue500,
+  buttonPrimaryText: Colors.white,
+  buttonSecondary: Colors.gray700,
+  buttonSecondaryBorder: Colors.gray600,
+  buttonSecondaryText: Colors.gray200,
+  buttonDisabled: Colors.gray700,
+  buttonDisabledText: Colors.gray500,
+
+  // Icon colors
+  iconPrimary: Colors.blue400,
+  iconSecondary: Colors.gray400,
+  iconTertiary: Colors.gray500,
+  iconInverse: Colors.gray900,
+
+  // Badge & Tag colors
+  badgeBackground: Colors.blue500,
+  badgeText: Colors.white,
+  tagBackground: Colors.blue900,
+  tagText: Colors.blue300,
 
   // Shadows & overlays
   shadow: 'rgba(0, 0, 0, 0.4)',
+  shadowDark: 'rgba(0, 0, 0, 0.6)',
   overlay: 'rgba(0, 0, 0, 0.7)',
+  overlayLight: 'rgba(0, 0, 0, 0.5)',
+
+  // Dividers
+  divider: Colors.gray700,
+  dividerDark: Colors.gray600,
 };
 
 /**

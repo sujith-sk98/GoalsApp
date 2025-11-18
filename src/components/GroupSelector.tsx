@@ -28,7 +28,7 @@ const GroupSelector = ({ groups, selectedGroup, onSelectGroup, onDeleteGroup, sh
   const allGroupsOption: GoalGroup = {
     id: 'all',
     name: 'All Groups',
-    color: '#10b981', // Colors.mint700
+    color: Theme.accent,
     friendIds: [],
     cards: [],
   };
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: Theme.overlay,
     justifyContent: 'center',
     alignItems: 'center',
     padding: Spacing.xl,
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     maxWidth: 320,
   },
   dropdown: {
-    backgroundColor: Colors.white,
+    backgroundColor: Theme.surfaceElevated,
     borderRadius: BorderRadius.xl,
     overflow: 'hidden',
     maxHeight: 400,

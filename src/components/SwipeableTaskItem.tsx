@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
     bottom: 0,
-    backgroundColor: Colors.green500,
+    backgroundColor: Theme.success,
     borderRadius: BorderRadius.md,
     flexDirection: 'row',
     alignItems: 'center',
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   completeBackgroundText: {
     fontSize: FontSize.base,
     fontWeight: FontWeight.semibold,
-    color: Colors.white,
+    color: Theme.textInverse,
   },
   taskItemSwipeable: {
     position: 'absolute',
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.white,
+    backgroundColor: Theme.background,
     borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     borderColor: Theme.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.white,
+    backgroundColor: Theme.background,
   },
   checkboxInner: {
     justifyContent: 'center',

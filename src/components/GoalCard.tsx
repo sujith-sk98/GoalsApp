@@ -95,7 +95,7 @@ const GoalCard = ({ group, onPress }: GoalCardProps) => {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#EFF7F6', // Pale mint background for cards
+    backgroundColor: Theme.cardBackground,
     borderRadius: BorderRadius.xxl,
     overflow: 'hidden',
     ...getShadow(3),

@@ -57,28 +57,28 @@ const Dashboard = () => {
     return {
       id: 'all',
       name: 'All Groups',
-      color: Colors.mint700,
+      color: Theme.accent,
       friendIds: Array.from(allFriendIds),
       cards: [
         {
           id: 'all-daily',
           period: 'daily',
           title: 'Daily Goals (All)',
-          color: Colors.mint700,
+          color: Theme.accent,
           goals: allDailyGoals,
         },
         {
           id: 'all-weekly',
           period: 'weekly',
           title: 'Weekly Goals (All)',
-          color: Colors.mint700,
+          color: Theme.accent,
           goals: allWeeklyGoals,
         },
         {
           id: 'all-monthly',
           period: 'monthly',
           title: 'Monthly Goals (All)',
-          color: Colors.mint700,
+          color: Theme.accent,
           goals: allMonthlyGoals,
         },
       ],
@@ -454,7 +454,7 @@ const Dashboard = () => {
               {getGroupFriends().map((friend) => (
                 <View key={friend.id} style={styles.friendItem}>
                   <View style={styles.friendAvatarContainer}>
-                    <View style={[styles.friendAvatar, { backgroundColor: Colors.mint600 }]}>
+                    <View style={[styles.friendAvatar, { backgroundColor: Theme.primary }]}>
                       <Text style={styles.friendInitial}>{getInitials(friend.name)}</Text>
                     </View>
                     {selectedGroup.id !== 'all' && (
@@ -515,7 +515,7 @@ const Dashboard = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Theme.background,
   },
   scrollContent: {
     paddingTop: Spacing.md,
@@ -585,12 +585,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.mint700,
+    backgroundColor: Theme.buttonPrimary,
     borderWidth: 1,
     borderColor: Theme.borderLight,
     borderRadius: BorderRadius.xl,
     gap: Spacing.sm,
-    shadowColor: '#000',
+    shadowColor: Theme.shadow,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -646,7 +646,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: FontSize.xs,
     fontWeight: FontWeight.bold,
-    color: Colors.white,
+    color: Theme.badgeText,
   },
   filterContainer: {
     flexDirection: 'row',
@@ -662,7 +662,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.full,
     borderWidth: 1.5,
     borderColor: Theme.primary,
-    backgroundColor: Colors.white,
+    backgroundColor: Theme.background,
   },
   filterButtonActive: {
     backgroundColor: Theme.primary,
@@ -673,7 +673,7 @@ const styles = StyleSheet.create({
     color: Theme.primary,
   },
   filterButtonTextActive: {
-    color: Colors.white,
+    color: Theme.textInverse,
   },
   swipeHint: {
     fontSize: FontSize.xs,
@@ -705,8 +705,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
-    borderColor: Colors.white,
-    shadowColor: '#000',
+    borderColor: Theme.background,
+    shadowColor: Theme.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -715,7 +715,7 @@ const styles = StyleSheet.create({
   friendInitial: {
     fontSize: FontSize.xl,
     fontWeight: FontWeight.bold,
-    color: Colors.white,
+    color: Theme.textInverse,
   },
   removeFriendButton: {
     position: 'absolute',
@@ -724,11 +724,11 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: BorderRadius.full,
-    backgroundColor: Colors.red500,
+    backgroundColor: Theme.error,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: Colors.white,
+    borderColor: Theme.background,
   },
   friendName: {
     fontSize: FontSize.sm,

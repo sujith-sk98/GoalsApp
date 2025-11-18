@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: Colors.white,
+    backgroundColor: Theme.surfaceElevated,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     height: '85%',
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
   submitButtonText: {
     fontSize: FontSize.base,
     fontWeight: FontWeight.bold,
-    color: Colors.white,
+    color: Theme.buttonPrimaryText,
   },
 });
 

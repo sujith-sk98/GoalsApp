@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: Colors.white,
+    backgroundColor: Theme.surfaceElevated,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     height: '90%',
@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
     color: Theme.textPrimary,
   },
   frequencyLabelSelected: {
-    color: Colors.white,
+    color: Theme.textInverse,
   },
   dropdownButton: {
     flexDirection: 'row',
@@ -551,7 +551,7 @@ const styles = StyleSheet.create({
   submitButtonText: {
     fontSize: FontSize.base,
     fontWeight: FontWeight.bold,
-    color: Colors.white,
+    color: Theme.buttonPrimaryText,
   },
 });
 

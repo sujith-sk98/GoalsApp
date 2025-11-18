@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: Colors.white,
+    backgroundColor: Theme.surfaceElevated,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     height: '90%',
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
   premiumBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.yellow50,
+    backgroundColor: Theme.warningLight,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 4,
     borderRadius: 12,
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
   premiumText: {
     fontSize: FontSize.xs,
     fontWeight: FontWeight.semibold,
-    color: Colors.yellow600,
+    color: Theme.warning,
   },
   textInput: {
     backgroundColor: Theme.background,
@@ -430,7 +430,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
   },
   dropdownButtonDisabled: {
-    backgroundColor: Colors.gray50,
+    backgroundColor: Theme.inputDisabled,
     opacity: 0.6,
   },
   dropdownText: {
@@ -546,7 +546,7 @@ const styles = StyleSheet.create({
   submitButtonText: {
     fontSize: FontSize.base,
     fontWeight: FontWeight.bold,
-    color: Colors.white,
+    color: Theme.buttonPrimaryText,
   },
 });
 

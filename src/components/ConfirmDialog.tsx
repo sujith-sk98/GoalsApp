@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
   },
   dialog: {
-    backgroundColor: Colors.white,
+    backgroundColor: Theme.surfaceElevated,
     borderRadius: 24,
     padding: Spacing.xxl,
     width: '100%',
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.primaryLight,
   },
   iconContainerDestructive: {
-    backgroundColor: Colors.red50,
+    backgroundColor: Theme.errorLight,
   },
   title: {
     fontSize: FontSize.xl,
@@ -160,12 +160,12 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.primary,
   },
   destructiveButton: {
-    backgroundColor: Colors.red600,
+    backgroundColor: Theme.error,
   },
   confirmButtonText: {
     fontSize: FontSize.base,
     fontWeight: FontWeight.bold,
-    color: Colors.white,
+    color: Theme.buttonPrimaryText,
   },
 });
 
