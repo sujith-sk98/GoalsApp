@@ -44,8 +44,6 @@ const AddGoalForm: React.FC<AddGoalFormProps> = ({
   const [selectedFrequency, setSelectedFrequency] = useState<GoalFrequency>('daily');
   const [selectedGroup, setSelectedGroup] = useState<GoalGroup | null>(null);
   const [showGroupDropdown, setShowGroupDropdown] = useState(false);
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
-  const inset = useSafeAreaInsets();
   
   // Use the storage-backed hooks
   const { groups, friends, refresh } = useGoals();
@@ -64,22 +62,6 @@ const AddGoalForm: React.FC<AddGoalFormProps> = ({
       }
     }
   }, [visible, defaultGroup]);
-
-  useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      'keyboardDidShow',
-      () => setIsKeyboardVisible(true)
-    );
-    const keyboardDidHideListener = Keyboard.addListener(
-      'keyboardDidHide',
-      () => setIsKeyboardVisible(false)
-    );
-
-    return () => {
-      keyboardDidShowListener.remove();
-      keyboardDidHideListener.remove();
-    };
-  }, []);
 
   const handleReset = () => {
     setGoalTitle('');
@@ -130,7 +112,7 @@ const AddGoalForm: React.FC<AddGoalFormProps> = ({
       transparent={true}
       onRequestClose={handleClose}
     >
-      <View style={[styles.modalOverlay, { marginBottom: isKeyboardVisible ? 0 : inset.bottom }]}>
+      <View style={[styles.modalOverlay]}>
         <View style={styles.modalContent}>
           {/* Header */}
           <View style={styles.header}>

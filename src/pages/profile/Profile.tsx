@@ -49,7 +49,7 @@ const Profile = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>
       <ScrollView 
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}

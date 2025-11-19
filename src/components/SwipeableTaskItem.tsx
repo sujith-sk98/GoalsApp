@@ -23,25 +23,32 @@ interface SwipeableTaskItemProps {
 const SwipeableTaskItem: React.FC<SwipeableTaskItemProps> = ({ goal, cardTitle, onComplete }) => {
   const translateX = useRef(new Animated.Value(0)).current;
   const [swiping, setSwiping] = useState(false);
+  const [completing, setCompleting] = useState(false);
+
+  // If goal is already completed, don't render
+  if (goal.completed) {
+    return null;
+  }
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => false,
       onMoveShouldSetPanResponder: (_, gestureState) => {
-        return Math.abs(gestureState.dx) > 5;
+        return !completing && Math.abs(gestureState.dx) > 5;
       },
       onPanResponderGrant: () => {
         setSwiping(true);
       },
       onPanResponderMove: (_, gestureState) => {
         // Only allow right swipe (positive dx)
-        if (gestureState.dx > 0) {
+        if (gestureState.dx > 0 && !completing) {
           translateX.setValue(Math.min(gestureState.dx, SWIPE_THRESHOLD + 20));
         }
       },
       onPanResponderRelease: (_, gestureState) => {
         setSwiping(false);
-        if (gestureState.dx > SWIPE_THRESHOLD) {
+        if (gestureState.dx > SWIPE_THRESHOLD && !completing) {
+          setCompleting(true);
           // Complete the task
           Animated.timing(translateX, {
             toValue: SCREEN_WIDTH,
@@ -49,7 +56,7 @@ const SwipeableTaskItem: React.FC<SwipeableTaskItemProps> = ({ goal, cardTitle, 
             useNativeDriver: true,
           }).start(() => {
             onComplete();
-            translateX.setValue(0);
+            // Don't reset here - let the component unmount or re-render naturally
           });
         } else {
           // Snap back
@@ -78,7 +85,7 @@ const SwipeableTaskItem: React.FC<SwipeableTaskItemProps> = ({ goal, cardTitle, 
 
   const completeTextOpacity = translateX.interpolate({
     inputRange: [0, SWIPE_THRESHOLD - 20, SWIPE_THRESHOLD],
-    outputRange: [0, 0, 1],
+    outputRange: [0, 0.5, 1],
     extrapolate: 'clamp',
   });
 

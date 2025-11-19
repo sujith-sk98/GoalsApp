@@ -13,11 +13,9 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
-  Keyboard,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { Theme, Spacing, FontSize, FontWeight, Colors } from '../utils/theme';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface AddFriendFormProps {
   visible: boolean;
@@ -33,24 +31,7 @@ const AddFriendForm: React.FC<AddFriendFormProps> = ({
   const [friendName, setFriendName] = useState('');
   const [friendEmail, setFriendEmail] = useState('');
   const [friendPhone, setFriendPhone] = useState('');
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
-  const inset = useSafeAreaInsets();
 
-  useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      'keyboardDidShow',
-      () => setIsKeyboardVisible(true)
-    );
-    const keyboardDidHideListener = Keyboard.addListener(
-      'keyboardDidHide',
-      () => setIsKeyboardVisible(false)
-    );
-
-    return () => {
-      keyboardDidShowListener.remove();
-      keyboardDidHideListener.remove();
-    };
-  }, []);
 
   const handleReset = () => {
     setFriendName('');
@@ -118,7 +99,7 @@ const AddFriendForm: React.FC<AddFriendFormProps> = ({
       transparent={true}
       onRequestClose={handleClose}
     >
-      <View style={[styles.modalOverlay, { marginBottom: isKeyboardVisible ? 0 : inset.bottom }]}>
+      <View style={[styles.modalOverlay]}>
         <View style={styles.modalContent}>
           {/* Header */}
           <View style={styles.header}>

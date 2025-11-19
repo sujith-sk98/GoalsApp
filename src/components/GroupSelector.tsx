@@ -95,7 +95,7 @@ const GroupSelector = ({ groups, selectedGroup, onSelectGroup, onDeleteGroup, sh
         animationType="slide"
         onRequestClose={() => setIsOpen(false)}
       >
-        <View style={[styles.overlay, { marginBottom: inset.bottom }]}>
+        <View style={[styles.overlay]}>
           <TouchableOpacity
             style={styles.overlayTouchable}
             activeOpacity={1}

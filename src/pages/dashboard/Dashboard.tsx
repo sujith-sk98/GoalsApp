@@ -155,8 +155,7 @@ const Dashboard = () => {
           setSelectedGroupId(null);
         }
       }
-      // Refresh to get updated data
-      await refresh();
+      // No need to refresh - deleteGroup already updates local state
     }
   };
 
@@ -166,10 +165,10 @@ const Dashboard = () => {
     groupId: string;
   }) => {
     const newGoal = await addGoal(goalData.groupId, goalData.frequency, goalData.title);
-    console.log('New goal created:', newGoal);
-    
-    // Refresh data - the useEffect will update selectedGroup automatically
-    await refresh();
+    if (newGoal) {
+      console.log('New goal created:', newGoal);
+    }
+    // The addGoal function already updates the local state, no need to refresh
   };
 
   const handleToggleGoal = async (goalId: string, cardId: string) => {
@@ -192,16 +191,16 @@ const Dashboard = () => {
       }
     }
     
-    // Toggle the goal
-    const success = await toggleGoalStorage(targetGroupId, cardId, goalId);
-    
-    if (success) {
-      // Refresh data - the useEffect will update selectedGroup automatically
-      await refresh();
+    // Toggle the goal - this will update storage and the hook will automatically
+    // update the state without a full refresh
+    try {
+      await toggleGoalStorage(targetGroupId, cardId, goalId);
+    } catch (error) {
+      console.error('Error toggling goal:', error);
     }
   };
 
-  const getPendingGoals = (): Array<{ goal: Goal; cardTitle: string; cardId: string; frequency: 'daily' | 'weekly' | 'monthly' }> => {
+  const getPendingGoals = useMemo((): Array<{ goal: Goal; cardTitle: string; cardId: string; frequency: 'daily' | 'weekly' | 'monthly' }> => {
     if (!selectedGroup) return [];
     
     const pending: Array<{ goal: Goal; cardTitle: string; cardId: string; frequency: 'daily' | 'weekly' | 'monthly' }> = [];
@@ -227,7 +226,7 @@ const Dashboard = () => {
     }
 
     return pending;
-  };
+  }, [selectedGroup, taskFilters]);
 
   const getTotalGoalsCount = (): number => {
     if (!selectedGroup) return 0;
@@ -264,9 +263,7 @@ const Dashboard = () => {
   const confirmRemoveFriend = async () => {
     if (friendToRemove && selectedGroup && selectedGroup.id !== 'all') {
       const success = await removeFriendFromGroupStorage(selectedGroup.id, friendToRemove.id);
-      if (success) {
-        await refresh();
-      }
+      // No need to refresh - removeFriendFromGroup already updates local state
     }
     setShowRemoveFriendDialog(false);
     setFriendToRemove(null);
@@ -401,14 +398,16 @@ const Dashboard = () => {
         </View>
 
         {/* Pending Tasks Section */}
-        {getPendingGoals().length > 0 && (
+        {hasAnyGoals && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="list" size={20} color={Theme.primary} />
               <Text style={styles.sectionTitle}>Pending Tasks</Text>
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{getPendingGoals().length}</Text>
-              </View>
+              {getPendingGoals.length > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{getPendingGoals.length}</Text>
+                </View>
+              )}
             </View>
 
             {/* Filter Buttons */}
@@ -477,19 +476,32 @@ const Dashboard = () => {
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.swipeHint}>
-              <Icon name="chevrons-right" size={12} color={Theme.textTertiary} /> Swipe right to complete
-            </Text>
-            <View style={styles.tasksList}>
-              {getPendingGoals().map(({ goal, cardTitle, cardId }) => (
-                <SwipeableTaskItem
-                  key={goal.id}
-                  goal={goal}
-                  cardTitle={cardTitle}
-                  onComplete={() => handleToggleGoal(goal.id, cardId)}
-                />
-              ))}
-            </View>
+            {getPendingGoals.length > 0 ? (
+              <>
+                <Text style={styles.swipeHint}>
+                  <Icon name="chevrons-right" size={12} color={Theme.textTertiary} /> Swipe right to complete
+                </Text>
+                <View style={styles.tasksList}>
+                  {getPendingGoals.map(({ goal, cardTitle, cardId }) => (
+                    <SwipeableTaskItem
+                      key={goal.id}
+                      goal={goal}
+                      cardTitle={cardTitle}
+                      onComplete={() => handleToggleGoal(goal.id, cardId)}
+                    />
+                  ))}
+                </View>
+              </>
+            ) : (
+              <View style={styles.noTasksContainer}>
+                <Icon name="check-circle" size={32} color={Theme.success} />
+                <Text style={styles.noTasksText}>
+                  {taskFilters.size > 0 
+                    ? 'No pending Goals for selected filters' 
+                    : 'All Goals completed!'}
+                </Text>
+              </View>
+            )}
           </View>
         )}
 
@@ -670,7 +682,6 @@ const styles = StyleSheet.create({
   addGoalButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
   },
   addGoalIconContainer: {
     justifyContent: 'center',
@@ -871,6 +882,18 @@ const styles = StyleSheet.create({
   emptyStateFeatureText: {
     fontSize: FontSize.base,
     color: Theme.textSecondary,
+    fontWeight: FontWeight.medium,
+  },
+  noTasksContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.xl,
+    gap: Spacing.md,
+  },
+  noTasksText: {
+    fontSize: FontSize.base,
+    color: Theme.textSecondary,
+    textAlign: 'center',
     fontWeight: FontWeight.medium,
   },
 });

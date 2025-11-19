@@ -13,12 +13,9 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
-  Pressable,
-  Keyboard,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { Theme, Spacing, FontSize, FontWeight, Colors } from '../utils/theme';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GoalStorage } from '../storage';
 
 interface Friend {
@@ -55,19 +52,9 @@ const AddGroupForm: React.FC<AddGroupFormProps> = ({
   const [selectedColor, setSelectedColor] = useState(THEME_COLORS[0].color);
   const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
   const [showFriendDropdown, setShowFriendDropdown] = useState(false);
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
-  const inset = useSafeAreaInsets();
 
   useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      'keyboardDidShow',
-      () => setIsKeyboardVisible(true)
-    );
-    const keyboardDidHideListener = Keyboard.addListener(
-      'keyboardDidHide',
-      () => setIsKeyboardVisible(false)
-    );
 
     const getUserPremiumStatus = async () => {
       // Fetch user data from storage or context to determine premium status
@@ -76,11 +63,6 @@ const AddGroupForm: React.FC<AddGroupFormProps> = ({
       });
     };
     getUserPremiumStatus();
-
-    return () => {
-      keyboardDidShowListener.remove();
-      keyboardDidHideListener.remove();
-    };
   }, []);
 
   const handleReset = () => {
@@ -135,7 +117,7 @@ const AddGroupForm: React.FC<AddGroupFormProps> = ({
       transparent={true}
       onRequestClose={handleClose}
     >
-      <View style={[styles.modalOverlay, { marginBottom: isKeyboardVisible ? 0 : inset.bottom }]}>
+      <View style={[styles.modalOverlay]}>
         <View style={styles.modalContent}>
           {/* Header */}
           <View style={styles.header}>

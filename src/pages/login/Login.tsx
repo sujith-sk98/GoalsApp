@@ -42,7 +42,7 @@ const Login = () => {
     Keyboard.dismiss();
     setShowError(false);
 
-    if (phoneNumber.trim().length < 8) {
+    if (phoneNumber.trim().length < 10) {
       setShowError(true);
       return;
     }
@@ -115,14 +115,14 @@ const Login = () => {
                     setShowError(false);
                   }}
                   keyboardType="phone-pad"
-                  maxLength={15}
+                  maxLength={10}
                   accessibilityLabel="Phone number input"
                   returnKeyType="done"
                   onSubmitEditing={handleContinue}
                 />
                 {showError && (
                   <Text style={styles.errorText}>
-                    Please enter at least 8 digits
+                    Please enter at least 10 digits
                   </Text>
                 )}
               </View>
@@ -131,10 +131,10 @@ const Login = () => {
               <TouchableOpacity
                 style={[
                   styles.primaryButton,
-                  phoneNumber.trim().length < 4 && styles.primaryButtonDisabled,
+                  phoneNumber.trim().length < 10 && styles.primaryButtonDisabled,
                 ]}
                 onPress={handleContinue}
-                disabled={phoneNumber.trim().length === 0}
+                disabled={phoneNumber.trim().length === 0 || phoneNumber.trim().length < 10 || phoneNumber.trim().length > 10}
                 accessibilityLabel="Continue button"
                 activeOpacity={0.8}
               >

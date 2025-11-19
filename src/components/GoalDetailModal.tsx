@@ -44,7 +44,11 @@ const GoalDetailModal = ({ visible, group, onClose }: GoalDetailModalProps) => {
 
   const completedCount = group.goals.filter(g => g.completed).length;
   const totalCount = group.goals.length;
-  const progressPercentage = (completedCount / totalCount) * 100;
+  const progressPercentage = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+
+  // Separate completed and pending goals
+  const completedGoals = group.goals.filter(g => g.completed);
+  const pendingGoals = group.goals.filter(g => !g.completed);
 
   return (
     <Modal
@@ -96,9 +100,45 @@ const GoalDetailModal = ({ visible, group, onClose }: GoalDetailModalProps) => {
             contentContainerStyle={styles.scrollViewContent}
             showsVerticalScrollIndicator={false}
           >
-            {group.goals.map((goal) => (
-              <GoalItem key={goal.id} goal={goal} />
-            ))}
+            {/* Pending Goals Section */}
+            {pendingGoals.length > 0 && (
+              <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <Icon name="target" size={16} color={Theme.primary} />
+                  <Text style={styles.sectionTitle}>In Progress</Text>
+                  <View style={styles.sectionBadge}>
+                    <Text style={styles.sectionBadgeText}>{pendingGoals.length}</Text>
+                  </View>
+                </View>
+                {pendingGoals.map((goal) => (
+                  <GoalItem key={goal.id} goal={goal} />
+                ))}
+              </View>
+            )}
+
+            {/* Completed Goals Section */}
+            {completedGoals.length > 0 && (
+              <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <Icon name="award" size={16} color={Theme.success} />
+                  <Text style={[styles.sectionTitle, styles.sectionTitleCompleted]}>Achievements</Text>
+                  <View style={[styles.sectionBadge, styles.sectionBadgeCompleted]}>
+                    <Text style={styles.sectionBadgeText}>{completedGoals.length}</Text>
+                  </View>
+                </View>
+                {completedGoals.map((goal) => (
+                  <GoalItem key={goal.id} goal={goal} />
+                ))}
+              </View>
+            )}
+
+            {/* Empty State */}
+            {totalCount === 0 && (
+              <View style={styles.emptyState}>
+                <Icon name="inbox" size={48} color={Theme.textTertiary} />
+                <Text style={styles.emptyStateText}>No goals yet</Text>
+              </View>
+            )}
           </ScrollView>
         </View>
       </View>
@@ -117,14 +157,14 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: BorderRadius.xxl,
     borderTopRightRadius: BorderRadius.xxl,
     height: '85%',
-    paddingBottom: Spacing.xl,
+    paddingBottom: Spacing.md,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: Spacing.xl,
-    paddingBottom: Spacing.lg,
+    padding: Spacing.lg,
+    paddingBottom: Spacing.md,
   },
   headerLeft: {
     flex: 1,
@@ -132,8 +172,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   iconBadge: {
-    width: 48,
-    height: 48,
+    width: 40,
+    height: 40,
     borderRadius: BorderRadius.md,
     justifyContent: 'center',
     alignItems: 'center',
@@ -143,18 +183,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontSize: FontSize.xxl,
+    fontSize: FontSize.xl,
     fontWeight: FontWeight.bold,
     color: Theme.textPrimary,
-    marginBottom: Spacing.xs,
+    marginBottom: 2,
   },
   subtitle: {
-    fontSize: FontSize.sm,
+    fontSize: FontSize.xs,
     color: Theme.textTertiary,
   },
   closeButton: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
     borderRadius: BorderRadius.full,
     backgroundColor: Theme.backgroundSecondary,
     justifyContent: 'center',
@@ -163,26 +203,26 @@ const styles = StyleSheet.create({
   progressSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.xl,
-    marginBottom: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
+    marginBottom: Spacing.md,
   },
   progressBar: {
     flex: 1,
-    height: 8,
+    height: 6,
     backgroundColor: Theme.backgroundSecondary,
     borderRadius: BorderRadius.full,
     overflow: 'hidden',
-    marginRight: Spacing.md,
+    marginRight: Spacing.sm,
   },
   progressFill: {
     height: '100%',
     borderRadius: BorderRadius.full,
   },
   progressText: {
-    fontSize: FontSize.sm,
+    fontSize: FontSize.xs,
     fontWeight: FontWeight.semibold,
     color: Theme.textSecondary,
-    minWidth: 40,
+    minWidth: 35,
     textAlign: 'right',
   },
   scrollView: {
@@ -190,7 +230,54 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     paddingHorizontal: Spacing.md,
-    paddingBottom: Spacing.lg,
+    paddingBottom: Spacing.md,
+  },
+  section: {
+    marginBottom: Spacing.lg,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    marginBottom: Spacing.sm,
+    paddingHorizontal: Spacing.xs,
+  },
+  sectionTitle: {
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.semibold,
+    color: Theme.textSecondary,
+    flex: 1,
+  },
+  sectionTitleCompleted: {
+    color: Theme.success,
+  },
+  sectionBadge: {
+    backgroundColor: Theme.primary,
+    borderRadius: BorderRadius.full,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sectionBadgeCompleted: {
+    backgroundColor: Theme.success,
+  },
+  sectionBadgeText: {
+    fontSize: 10,
+    fontWeight: FontWeight.bold,
+    color: Colors.white,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.xxl,
+  },
+  emptyStateText: {
+    fontSize: FontSize.sm,
+    color: Theme.textTertiary,
+    marginTop: Spacing.sm,
   },
 });
 
